@@ -42,8 +42,66 @@ const displayProducts = (products) => {
     : "<p>No products found.</p>";
 };
 
+const searchInput = document.getElementById("search-input");
+const suggestionsList = document.getElementById("suggestions-list");
+
+const getHistory = () =>
+  JSON.parse(localStorage.getItem("searchHistory") || "[]");
+const saveHistory = (term) => {
+  if (!term) return;
+  const history = getHistory();
+  if (!history.includes(term)) {
+    history.unshift(term);
+    localStorage.setItem("searchHistory", JSON.stringify(history.slice(0, 10)));
+  }
+};
+
+
+const showSuggestions = (items) => {
+  if (!items.length) {
+    suggestionsList.classList.add("hidden");
+    return;
+  }
+  suggestionsList.innerHTML = items.map((item) => `<li>${item}</li>`).join("");
+  suggestionsList.classList.remove("hidden");
+};
+
+
+searchInput.addEventListener("focus", () => showSuggestions(getHistory()));
+searchInput.addEventListener("input", (e) => {
+  const term = e.target.value.toLowerCase();
+  const history = getHistory();
+  const filtered = history.filter((h) => h.toLowerCase().includes(term));
+  showSuggestions(term ? filtered : history);
+});
+
+suggestionsList.addEventListener("click", (e) => {
+  if (e.target.tagName === "LI") {
+    searchInput.value = e.target.textContent;
+    suggestionsList.classList.add("hidden");
+    document.getElementById("search-button").click();
+  }
+});
+
+document.addEventListener("click", (e) => {
+  if (
+    !e.target.closest("#input-wrapper") &&
+    !e.target.closest("#history-button")
+  ) {
+    suggestionsList.classList.add("hidden");
+  }
+});
+
+document.getElementById("history-button").onclick = () => {
+  showSuggestions(getHistory());
+  console.log(getHistory());
+
+};
+
 document.getElementById("search-button").onclick = () => {
-  const term = document.getElementById("search-input").value;
+  const term = searchInput.value;
+  saveHistory(term);
+
   const url = new URL(window.location);
   if (term) url.searchParams.set("search", term);
   else url.searchParams.delete("search");
@@ -54,6 +112,7 @@ document.getElementById("search-button").onclick = () => {
       p.title.toLowerCase().includes(term.toLowerCase()),
     ),
   );
+  suggestionsList.classList.add("hidden");
 };
 
 fetchProducts();

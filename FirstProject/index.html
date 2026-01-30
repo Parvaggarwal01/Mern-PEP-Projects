@@ -12,8 +12,17 @@
     </header>
 
     <div id="search-container">
-      <input type="text" id="search-input" placeholder="Search products..." />
+      <div id="input-wrapper">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search products..."
+          autocomplete="off"
+        />
+        <ul id="suggestions-list" class="hidden"></ul>
+      </div>
       <button id="search-button">Search</button>
+      <button id="history-button">History</button>
     </div>
 
     <div id="product-container">
