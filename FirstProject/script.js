@@ -29,13 +29,13 @@ const displayProducts = (products) => {
     ? products
         .map(
           (p) => `
-        <div class="card">
+        <a href="product.html?id=${p.id}" class="card" style="text-decoration: none; color: inherit;">
             <div class="card-image-container">
                 <img src="${p.thumbnail}" alt="${p.title}" loading="lazy">
             </div>
             <h2 class="card-title">${p.title}</h2>
             <div class="card-price">$${p.price}</div>
-        </div>
+        </a>
     `,
         )
         .join("")
