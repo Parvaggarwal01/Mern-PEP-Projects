@@ -1,33 +1,44 @@
 async function fetchProductDetails() {
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get("id");
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
 
-        if (!id) {
-          document.body.innerHTML =
-            "<h1>Product not found</h1><a href='index.html'>Go Home</a>";
-          return;
-        }
+  if (!id) {
+    document.body.innerHTML =
+      "<h1>Product not found</h1><a href='index.html'>Go Home</a>";
+    return;
+  }
 
-        try {
-          const res = await fetch(`https://dummyjson.com/products/${id}`);
-          if (!res.ok) throw new Error("Product not found");
-          const product = await res.json();
-          renderProduct(product);
-        } catch (err) {
-          console.error(err);
-          document.getElementById("product-detail-container").innerHTML =
-            "<p>Error loading product details.</p>";
-        }
-      }
+  try {
+    const res = await fetch(`https://dummyjson.com/products/${id}`);
+    if (!res.ok) throw new Error("Product not found");
+    const product = await res.json();
+    renderProduct(product);
+  } catch (err) {
+    console.error(err);
+    document.getElementById("product-detail-container").innerHTML =
+      "<p>Error loading product details.</p>";
+  }
+}
 
-      function renderProduct(product) {
+function addToViewHistory(product) {
+  let history = JSON.parse(localStorage.getItem("viewHistory") || "[]");
+  history = history.filter((item) => item.id !== product.id);
+  history.unshift({
+    id: product.id,
+    title: product.title,
+    timestamp: new Date().toLocaleString(),
+  });
+  localStorage.setItem("viewHistory", JSON.stringify(history.slice(0, 50)));
+}
 
-        const imageSection = document.querySelector(".product-image-section");
-        imageSection.innerHTML = `<img src="${product.images[0] || product.thumbnail}" alt="${product.title}">`;
+function renderProduct(product) {
+  addToViewHistory(product);
+  const imageSection = document.querySelector(".product-image-section");
+  imageSection.innerHTML = `<img src="${product.images[0] || product.thumbnail}" alt="${product.title}">`;
 
-        const infoSection = document.querySelector(".product-info-section");
+  const infoSection = document.querySelector(".product-info-section");
 
-        infoSection.innerHTML = `
+  infoSection.innerHTML = `
             <div class="product-meta">
                 ${product.brand ? `<span>${product.brand}</span> | ` : ""}
                 <span>${product.category}</span>
@@ -81,6 +92,6 @@ async function fetchProductDetails() {
                 ${product.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}
             </div>
           `;
-      }
+}
 
-      fetchProductDetails();
+fetchProductDetails();

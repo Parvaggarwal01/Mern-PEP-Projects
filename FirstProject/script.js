@@ -105,6 +105,10 @@ document.getElementById("history-button").onclick = () => {
   window.location.href = "history.html";
 };
 
+document.getElementById("view-button").onclick = () => {
+  window.location.href = "view-history.html";
+};
+
 document.getElementById("search-button").onclick = () => {
   const term = searchInput.value;
   saveHistory(term);
