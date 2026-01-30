@@ -64,7 +64,8 @@ header {
 }
 
 #search-button,
-#history-button {
+#history-button,
+#view-button {
   padding: 10px 20px;
   font-size: 1rem;
   background-color: #000;
