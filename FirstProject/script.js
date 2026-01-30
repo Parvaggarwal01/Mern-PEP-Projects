@@ -1,27 +1,67 @@
 let allProducts = [];
 const container = document.getElementById("product-container");
+let currentPage = 1;
+const limit = 10; // Items per page
+let totalProducts = 0;
 
-const fetchProducts = async () => {
+const fetchProducts = async (page = 1, searchQuery = "") => {
   try {
-    const res = await fetch("https://dummyjson.com/products");
-    allProducts = (await res.json()).products;
+    const skip = (page - 1) * limit;
+    let url = `https://dummyjson.com/products?limit=${limit}&skip=${skip}`;
 
-    const params = new URLSearchParams(window.location.search);
-    const term = params.get("search");
-
-    if (term) {
-      document.getElementById("search-input").value = term;
-      displayProducts(
-        allProducts.filter((p) =>
-          p.title.toLowerCase().includes(term.toLowerCase()),
-        ),
-      );
-    } else {
-      displayProducts(allProducts);
+    if (searchQuery) {
+      url = `https://dummyjson.com/products/search?q=${searchQuery}&limit=${limit}&skip=${skip}`;
     }
-  } catch {
+
+    const res = await fetch(url);
+    const data = await res.json();
+    allProducts = data.products;
+    totalProducts = data.total;
+
+    displayProducts(allProducts);
+    updatePagination(page);
+  } catch (err) {
+    console.error(err);
     container.innerHTML = "<p>Error loading products.</p>";
   }
+};
+
+const updatePagination = (page) => {
+  currentPage = page;
+  document.getElementById("page-info").textContent = `Page ${currentPage}`;
+  document.getElementById("prev-btn").disabled = currentPage === 1;
+  // Calculate total pages
+  const totalPages = Math.ceil(totalProducts / limit);
+  document.getElementById("next-btn").disabled = currentPage >= totalPages;
+};
+
+document.getElementById("prev-btn").onclick = () => {
+  if (currentPage > 1) {
+    const url = new URL(window.location);
+    url.searchParams.set("page", currentPage - 1);
+    window.history.pushState({}, "", url);
+    fetchProducts(
+      currentPage - 1,
+      document.getElementById("search-input").value,
+    );
+  }
+};
+
+document.getElementById("next-btn").onclick = () => {
+  const url = new URL(window.location);
+  url.searchParams.set("page", currentPage + 1);
+  window.history.pushState({}, "", url);
+  fetchProducts(currentPage + 1, document.getElementById("search-input").value);
+};
+
+const init = () => {
+  const params = new URLSearchParams(window.location.search);
+  const term = params.get("search") || "";
+  const page = parseInt(params.get("page")) || 1;
+
+  if (term) document.getElementById("search-input").value = term;
+
+  fetchProducts(page, term);
 };
 
 const displayProducts = (products) => {
@@ -116,14 +156,13 @@ document.getElementById("search-button").onclick = () => {
   const url = new URL(window.location);
   if (term) url.searchParams.set("search", term);
   else url.searchParams.delete("search");
+
+  // Reset to page 1 for new searches
+  url.searchParams.set("page", 1);
   window.history.pushState({}, "", url);
 
-  displayProducts(
-    allProducts.filter((p) =>
-      p.title.toLowerCase().includes(term.toLowerCase()),
-    ),
-  );
   suggestionsList.classList.add("hidden");
+  fetchProducts(1, term);
 };
 
-fetchProducts();
+init();
