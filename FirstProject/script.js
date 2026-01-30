@@ -45,33 +45,42 @@ const displayProducts = (products) => {
 const searchInput = document.getElementById("search-input");
 const suggestionsList = document.getElementById("suggestions-list");
 
-const getHistory = () =>
-  JSON.parse(localStorage.getItem("searchHistory") || "[]");
-const saveHistory = (term) => {
-  if (!term) return;
-  const history = getHistory();
-  if (!history.includes(term)) {
-    history.unshift(term);
-    localStorage.setItem("searchHistory", JSON.stringify(history.slice(0, 10)));
+const getHistory = () => {
+  let history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+  if (history.length && typeof history[0] === "string") {
+    history = history.map((term) => ({
+      term,
+      timestamp: new Date().toLocaleString(),
+    }));
+    localStorage.setItem("searchHistory", JSON.stringify(history));
   }
+  return history;
 };
 
+const saveHistory = (term) => {
+  if (!term) return;
+  let history = getHistory();
+  history = history.filter((h) => h.term.toLowerCase() !== term.toLowerCase());
+  history.unshift({ term, timestamp: new Date().toLocaleString() });
+  localStorage.setItem("searchHistory", JSON.stringify(history.slice(0, 50)));
+};
 
 const showSuggestions = (items) => {
   if (!items.length) {
     suggestionsList.classList.add("hidden");
     return;
   }
-  suggestionsList.innerHTML = items.map((item) => `<li>${item}</li>`).join("");
+  suggestionsList.innerHTML = items
+    .map((item) => `<li>${item.term}</li>`)
+    .join("");
   suggestionsList.classList.remove("hidden");
 };
-
 
 searchInput.addEventListener("focus", () => showSuggestions(getHistory()));
 searchInput.addEventListener("input", (e) => {
   const term = e.target.value.toLowerCase();
   const history = getHistory();
-  const filtered = history.filter((h) => h.toLowerCase().includes(term));
+  const filtered = history.filter((h) => h.term.toLowerCase().includes(term));
   showSuggestions(term ? filtered : history);
 });
 
@@ -93,9 +102,7 @@ document.addEventListener("click", (e) => {
 });
 
 document.getElementById("history-button").onclick = () => {
-  showSuggestions(getHistory());
-  console.log(getHistory());
-
+  window.location.href = "history.html";
 };
 
 document.getElementById("search-button").onclick = () => {
